@@ -1,0 +1,9 @@
+## Interface: 80000
+## Title: LibMayronObjects
+## Author: Mayron
+## Version: 2.5
+## Note: An object-oriented framework for Lua
+
+LibStub.lua
+LibMayronObjects.xml
+LibMayronObjects.Test.lua
