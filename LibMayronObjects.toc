@@ -6,4 +6,3 @@
 
 LibStub.lua
 LibMayronObjects.xml
-LibMayronObjects.Test.lua
