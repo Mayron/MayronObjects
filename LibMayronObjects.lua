@@ -865,7 +865,7 @@ function Core:ValidateFunctionCall(definition, errorMessage, ...)
                     -- it's optional:
                     defValue = defValue:sub(2, #defValue);
                     errorFound = (realValue ~= nil) and (defValue ~= "any" and not self:IsMatchingTypes(defValue, realValue));
-                else
+                else                   
                     errorFound = (realValue == nil) or (defValue ~= "any" and not self:IsMatchingTypes(defValue, realValue));
                 end
             else
@@ -873,9 +873,11 @@ function Core:ValidateFunctionCall(definition, errorMessage, ...)
                 defValue = "nil";
             end
 
-            errorMessage = string.format(errorMessage .. " (%s expected, got %s)", defValue, self:GetValueType(realValue));
-            errorMessage = errorMessage:gsub("##", "#" .. tostring(id));
-            self:Assert(not errorFound, errorMessage);
+            if (errorFound) then
+                errorMessage = string.format("%s (%s expected, got %s)", errorMessage, defValue, self:GetValueType(realValue));
+                errorMessage = errorMessage:gsub("##", "#" .. tostring(id));        
+                self:Error(errorMessage);
+            end
 
             id = id + 1;
             realValue = (select(id, ...));
