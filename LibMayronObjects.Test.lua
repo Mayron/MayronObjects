@@ -751,7 +751,7 @@ end
 ---------------------------------
 -- Run Tests:
 ---------------------------------
-HelloWorld_Test1();
+-- HelloWorld_Test1();
 -- Inheritance_Test1();
 -- DefineParams_Test1();
 -- DefineReturns_Test1();
