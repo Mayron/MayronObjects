@@ -122,7 +122,7 @@ MyPackage:DefineParams("string", "number", "?table");
 MyPackage:DefineReturns("any", "function", "?boolean");
 ```
 
-# 4.2: Object and Widget Names as Function Parameters and Return Types
+## 4.2: Object and Widget Names as Function Parameters and Return Types
 
 Because all objects inherit the `GetObjectType()` function from the Object class, you can also validate parameter and return values to check whether or not they are of a certain class type:
 
@@ -131,7 +131,7 @@ MyPackage:DefineParams("Frame", "Button", "?MySlider");
 MyPackage:DefineReturns("IHandler", "MyClass", "?SomeWidget");
 ```
 
-# 4.3: Default Primative Parameter Values
+## 4.3: Default Primative Parameter Values
 
 Since update 3.0, you can now add default parameters. If this function is called without any parameters then message will be assigned the value "foo bar" and value will be assigned the value 14:
 
@@ -144,7 +144,7 @@ end
 
 Of course, if this method was called with 2 values supplied then the default values will be ignored. Using the optional syntax `"?"` at the front of the value type is not required if a default parameter has been specified.
 
-# 4.4: Default Complex Parameter Values
+## 4.4: Default Complex Parameter Values
 
 The above approach in section 4.3 works well for simple values that can be parsed from a string, but more complicated parameter types will struggle to be parsed from strings, such as widgets/frames, tables and functions. For this, use the following approach:
 
@@ -385,7 +385,7 @@ Line 10 will print "SuperChild", because line 35 passes the private instance dat
 
 All of the assert functions in this example will not trigger an error. This shows that each function implementation is being called correctly.
 
-# 9:2: Calling a Parent Constructor inside a Child Constructor
+## 9:2: Calling a Parent Constructor inside a Child Constructor
 
 You can also use the special `Super()`, functiona call as a shortcut for calling the parent constructor. This is useful if every child class of a parent shares similar constructor logic:
 
