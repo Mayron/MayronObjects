@@ -2,6 +2,7 @@
 
 
 * LibMayronObjects is a framework intended on making object-oriented programming easier for Lua developers. 
+* The framework is designed for World of Warcraft AddOn development and supports both Classic and Retail editions.
 * You can create classes and call them to instantiate new instances/objects modeled from those classes.
 * You can create interfaces that enforce functions to be implemented by classes.
 * You can enforce strict typing rules to class and interface function parameters and return values. 
