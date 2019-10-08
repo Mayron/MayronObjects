@@ -5,7 +5,8 @@
 * The framework is designed for World of Warcraft AddOn development and supports both Classic and Retail editions (just make sure that you update the `toc` version number appropriately for whichever edition you require it for).
 * You can create classes and call them to instantiate new instances/objects modeled from those classes.
 * You can create interfaces that enforce functions to be implemented by classes.
-* You can enforce strict typing rules to class and interface function parameters and return values. 
+* You can enforce strict typing rules to class and interface function parameters and return values.
+* You can define default parameter value including both primitive types (strings and numbers) and complex types (tables, functions, Blizzard widgets and other classes and interfaces).
 * Each class can inherit from at most one parent class. All classes either directly, or indirectly, inherit from the Object class.
 * There are many useful Object functions that all classes inherit and can use.
 * You can create and export packages, and import packages or separate classes and interfaces.
