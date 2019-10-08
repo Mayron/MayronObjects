@@ -8,6 +8,9 @@
 * You can enforce strict typing rules to class and interface function parameters and return values.
 * You can define default parameter value including both primitive types (strings and numbers) and complex types (tables, functions, Blizzard widgets and other classes and interfaces).
 * Each class can inherit from at most one parent class. All classes either directly, or indirectly, inherit from the Object class.
+* Each class can implement multiple interfaces.
+* You can create generic types, such as a list that only works with tables, and another list that only works for numbers.
+* You can define custom attributes for class functions to apply pre-execution logic and control how the function should be called.
 * There are many useful Object functions that all classes inherit and can use.
 * You can create and export packages, and import packages or separate classes and interfaces.
 * The framework also comes with some standard collection classes (List, Stack, Map, LinkedList).
