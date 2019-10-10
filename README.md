@@ -234,17 +234,55 @@ local Animator = WidgetsPackage:Get("Animator");
 
 Line 14 shows how you can import just one entity. Lines 16 - 21 show how you can import an entire package and then use the Package's Get function to retrieve individual entities. You can also create new entities to be added to the package that you have imported.
 
-# 7: Creating an Interface
+# 7: Constructors and Destructors
+
+A class can be assigned a constructor and a destructor. A constructor is a function that is called when an instance is first created from that class. A destructor is called either by the garbage collector if the reference for an instance ceases to exist, or by explicitly calling `Destroy()` on the instance.
+
+```lua
+local LibMayronObjects = LibStub:GetLibrary("LibMayronObjects");
+local MyPackage = LibMayronObjects:CreatePackage("MyPackage");
+
+local Parent = MyPackage:CreateClass("Parent"); 
+
+function Parent:Talk(data)
+    print(data.Dialog);
+end
+
+function Parent:__Construct(data)
+    data.Dialog = "I am a parent.";
+end
+
+local Child = MyPackage:CreateClass("Child", Parent);
+
+function Child:__Construct(data)
+    data.Dialog = "I am a child!";
+end
+
+function Child:__Destruct(data)
+    data.Dialog = nil;
+    print("Child object Destroyed!");
+end
+
+local child = Child();
+
+child:Talk(); -- prints "I am a child!"
+
+child:Destroy(); -- prints "Child object Destroyed!"
+```
+
+The private instance data from the child object is passed to the parent function. This is why line 27 prints "I am a child!" and not "I am a parent.". `__Construct` and `__Destruct` do not need to be manually called. They are implicitly called by LibMayronObjects when required.
+
+# 8: Creating an Interface
 
 Interfaces can be a great way of specifying rules and patterns for a system. Interfaces cannot inherit or implement other entities. `MyPackage:CreateInterface(interfaceName, interfaceDefinition)` takes two arguments: the interface's name and an interface definition table.
 
-The definition table specifies all interface functions and properties that must be defined before an instance of a class is allowed to be created, else an error will show. For functions, the class must implement them. For properties of an instance, these must be assigned the correct value type inside the constructor (`__Construct`). If the interface property definition says that the property can be optional (i.e. `?table`) then these do not need to be assigned immediately in the constructor, but if assigned a value then the type of that value must still be the correct type (see section `7.2` on implementing interface properties correctly for more information).
+The definition table specifies all interface functions and properties that must be defined before an instance of a class is allowed to be created, else an error will show. For functions, the class must implement them. For properties of an instance, these must be assigned the correct value type inside the constructor (`__Construct`). If the interface property definition says that the property can be optional (i.e. `?table`) then these do not need to be assigned immediately in the constructor, but if assigned a value then the type of that value must still be the correct type (see section `8.2` on implementing interface properties correctly for more information).
 
 The point of an interface is to avoid unexpected errors occuring from missing expected values. This avoids the need for multiple conditional checks and improves error handling as errors occur at the right point in time when a table value is illegally reassigned.
 
 Similar to classes, interfaces can also be exported and stored into a package.
 
-## 7.1: Defining and Implementing Interface Functions
+## 8.1: Defining and Implementing Interface Functions
 
 A class that implements an interface with defined functions must setup those functions in the same way that a class usually sets up functions. If any function is missing then an error will be throw when logging into the game.
 
@@ -313,7 +351,7 @@ You can implement many interfaces, but only inherit from one parent class:
 local MyClass = MyPackage:CreateClass("MyClass", MyParent, IInterface1, IInterface2, IInterface3);
 ```
 
-## 7.2: Defining and Implementing Interface Properties
+## 8.2: Defining and Implementing Interface Properties
 
 We can expand on the previous code to add interface properties. These are properties of an instance that has been created from a class which implements the interface. Properties are public so we know what to expect when attempting to use them. Therefore, they do not belong inside the private instance `data` table and instead must be assigned to the `self` reference variable.
 
@@ -346,44 +384,6 @@ end
 local C_EventHandler = lib:Import("MyEngine.Events.EventHandler");
 local myComponent = Component(nil, C_EventHandler());
 ```
-
-# 8: Constructors and Destructors
-
-A class can be assigned a constructor and a destructor. A constructor is a function that is called when an instance is first created from that class. A destructor is called either by the garbage collector if the reference for an instance ceases to exist, or by explicitly calling `Destroy()` on the instance.
-
-```lua
-local LibMayronObjects = LibStub:GetLibrary("LibMayronObjects");
-local MyPackage = LibMayronObjects:CreatePackage("MyPackage");
-
-local Parent = MyPackage:CreateClass("Parent"); 
-
-function Parent:Talk(data)
-    print(data.Dialog);
-end
-
-function Parent:__Construct(data)
-    data.Dialog = "I am a parent.";
-end
-
-local Child = MyPackage:CreateClass("Child", Parent);
-
-function Child:__Construct(data)
-    data.Dialog = "I am a child!";
-end
-
-function Child:__Destruct(data)
-    data.Dialog = nil;
-    print("Child object Destroyed!");
-end
-
-local child = Child();
-
-child:Talk(); -- prints "I am a child!"
-
-child:Destroy(); -- prints "Child object Destroyed!"
-```
-
-The private instance data from the child object is passed to the parent function. This is why line 27 prints "I am a child!" and not "I am a parent.". `__Construct` and `__Destruct` do not need to be manually called. They are implicitly called by LibMayronObjects when required.
 
 # 9: Calling Parent Functions from a Child Instance
 
