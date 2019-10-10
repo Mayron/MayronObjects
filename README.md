@@ -236,41 +236,74 @@ Line 14 shows how you can import just one entity. Lines 16 - 21 show how you can
 
 # 7: Creating an Interface
 
-Interfaces can be a great way of specifying rules/patterns for a system. Interfaces cannot inherit or implement other entities. `MyPackage:CreateInterface()` only takes one argument: the interfaces name. Interfaces, like classes, can be both exported and imported.
+Interfaces can be a great way of specifying rules and patterns for a system. Interfaces cannot inherit or implement other entities. `MyPackage:CreateInterface(interfaceName, interfaceDefinition)` takes two arguments: the interface's name and an interface definition table.
+
+The definition table specifies all interface functions and properties that must be defined before an instance of a class is allowed to be created, else an error will show. For functions, the class must implement them. For properties of an instance, these must be assigned the correct value type inside the constructor (`__Construct`). If the interface property definition says that the property can be optional (i.e. `?table`) then these do not need to be assigned immediately in the constructor, but if assigned a value then the type of that value must still be the correct type (see section `7.2` on implementing interface properties correctly for more information).
+
+The point of an interface is to avoid unexpected errors occuring from missing expected values. This avoids the need for multiple conditional checks and improves error handling as errors occur at the right point in time when a table value is illegally reassigned.
+
+Similar to classes, interfaces can also be exported and stored into a package.
+
+## 7.1: Defining and Implementing Interface Functions
+
+A class that implements an interface with defined functions must setup those functions in the same way that a class usually sets up functions. If any function is missing then an error will be throw when logging into the game.
+
+You should not try to redefine functions using `lib:DefineParams(...)` or `lib:DefineReturns(...)` as this too is an illegal operation and will result in an error. This is because when a value is defined as an instance of an interface, meaning that the value implements that interface, we should expect the object to implement the interface correctly to avoid unexpected behaviours. For example, if we define another function in another class to have:
+
+```lua
+LibMayronObjects:DefineParams("IEventHandler");
+function MyClass:SetUpEvents(data, eventHandler)
+    -- stuff
+end
+```
+
+And we pass in an instance of a class `EventHandler` which implements `IEventHandler` then we expect the instance to have an implementation for that interface. Therefore, `EventHandler` should not be allowed to change the definitions setup by the interface. However, this does not mean that the class cannot add new definitions to other functions not previously defined by the interface. It simply means that you cannot override already defined ones.
 
 ```lua
 local LibMayronObjects = LibStub:GetLibrary("LibMayronObjects");
-local MyPackage = LibMayronObjects:CreatePackage("MyPackage");
 
-local IEventHandler = MyPackage:CreateInterface("IEventHandler");
+-- exported into "MyEngine.ComponentsPackage"
+local ComponentsPackage = LibMayronObjects:CreatePackage("ComponentsPackage", "MyEngine");
 
-MyPackage:DefineParams("string", "function");
-MyPackage:DefineReturns("boolean");
-function IEventHandler:Register(eventName, func) end
+-- can be imported using lib:Import("MyEngine.ComponentsPackage.IComponent");
+ComponentsPackage:CreateInterface("IComponent", {
+    -- this function must be implemented by the class with no definition for parameters or return values
+    Update = "function";
 
-function IEventHandler:Execute() end
+    -- this function must be implemented by the class and must accept 1 parameter of type "boolean"
+    SetEnabled = {type = "function"; params = "boolean" };
 
-local Frame = MyPackage:CreateClass("Frame", nil, IEventHandler);
+    -- this function must be implemented by the class and must return 1 value value of type boolean
+    IsEnabled = {type = "function"; returns = "boolean"};
 
-function Frame:Register(data, eventName, func)
-    -- do stuff
+    -- The constructor that defined 3 parameters (only IEventHandler is required):
+    -- a table, an IEventHandler interface object, and a Frame widget
+    __Construct = {type = "function", params = {"?table", "IEventHandler", "?Frame"}}
+});
+
+local Component = MyPackage:CreateClass("Component", nil, "ComponentsPackage.IComponent");
+
+function Component:Update(data)
+    -- implement the function here
+end
+
+function Component:SetEnabled(data, enabled)
+    data.enabled = enabled; -- we can assume that the enabled parameter must be a boolean
+end
+
+-- We do not need to reassign a function definition using `DefineParams` because
+-- it uses the interface definition which cannot be replaced.
+function Component:IsEnabled(data)
+    -- this function must return a boolean value as specified by the interface definition
     return true;
 end
 
-function Frame:Execute(data)
-    -- do stuff
+function Component:__Construct(data, labels, eventHandler, frame)
+    -- labels must be either nil or a table
+    -- eventHandler must be an object of type IEventHandler
+    -- frame must be either nil or a Frame widget 
 end
-
-local myFrame = Frame();
-
-myFrame:Register("PLAYER_ENTERING_WORLD", function() 
-    print("Hello, World!") 
-end);
 ```
-
-Lines 8 and 10 show 2 interface functions being created. Interface functions do not, and should not, have any function body code used for implementation. Instead, classes that are declared as "implementing the interface" must supply the function's implementation.
-
-You do not need to, and should not, redeclare the return and param definitions for functions that have already been defined by the interface. You simply use the same function signature and include the implementation at the class level.
 
 All functions must be implemented for each interface attached to the class. You cannot implement from 2 or more interfaces that share the same function name as this would cause a clash.
 
@@ -280,30 +313,39 @@ You can implement many interfaces, but only inherit from one parent class:
 local MyClass = MyPackage:CreateClass("MyClass", MyParent, IInterface1, IInterface2, IInterface3);
 ```
 
-## 7.2: Defining Properties for Implementing
-You can specify strongly-typed properties that must be implemented inside a constructor
+## 7.2: Defining and Implementing Interface Properties
+
+We can expand on the previous code to add interface properties. These are properties of an instance that has been created from a class which implements the interface. Properties are public so we know what to expect when attempting to use them. Therefore, they do not belong inside the private instance `data` table and instead must be assigned to the `self` reference variable.
+
+For required properties, you must define them inside the constructor (`__Construct`), else an error will occur saying the instance has not successfully implemented the interface.
+
+For optional properties, these can be assigned at any point (as long as the value type is correct).
+
+Unlike defined functions, you can reassign the value of a property at anytime.
 
 ```lua
-local MyInterface= TestPackage:CreateInterface("MyInterface");
-MyInterface:DefineProperty("MyBoolean", "boolean");
+ComponentsPackage:CreateInterface("IComponent", {
+    -- properties:
+    MenuContent = "Frame"; -- an required Frame widget (must be assigned in the constructor)
+    MenuLabels = "?table"; -- an optional table
+    TotalLabelsShown = "?number"; -- an optional number 
+    Button = "Button"; -- a required Button widget (must be assigned in the constructor)
+});
 
-local MyClass= TestPackage:CreateClass("MyClass", nil, MyInterface);
-
-function MyClass:__Construct(data)
-    -- must define boolean property:
-    self.MyBoolean = true;
+function Component:__Construct(data, labels, eventHandler, frame)
+    -- the interface definition states that we must implement 2 required properties
+    -- and we can also implement the 2 optional properties now or later.
+    -- properties should not be in the private `data` table. They must be assigned to `self`.
+    self.MenuContent = frame or CreateFrame("Frame"); -- this is required by "frame" param is optional
+    self.MenuLabels = labels; -- this will be nil
+    self.Button = CreateFrame("Button"); -- this must have a value
+    -- self.TotalLabelsShown -- do not need to assign this just yet. We can add it later in another method
+    data.eventHandler = eventHandler;
 end
 
-local myInstance = MyClass();
+local C_EventHandler = lib:Import("MyEngine.Events.EventHandler");
+local myComponent = Component(nil, C_EventHandler());
 ```
-
-Properties are publically available (not privately stored inside the data table) and must be attached to the instance using the `self` keyword. These properties can also be assigned the `"any"` type so that they are required but the type of value is not important. You can also specify the property type as optional:
-
-```lua
-MyInterface:DefineProperty("MyBoolean", "?boolean");
-```
-
-This is useful for when a property can either be `nil`, or the expected value type.
 
 # 8: Constructors and Destructors
 
