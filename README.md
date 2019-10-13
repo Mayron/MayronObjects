@@ -387,8 +387,7 @@ local myComponent = Component(nil, C_EventHandler());
 
 # 9: Calling Parent Functions from a Child Instance
 
-An important Object function is `Parent()`. Using parent on an instance object, whose class has a parent class, will cause the parent function to be executed instead. This means that if a child and a parent class both have implementations of the same function (where both functions have the same key/name), the parent function 
-will be called *and* the private data sent to the function will be the original, child object.
+An important property of any instance of an object is `Parent`. Using this on an instance object, whose class has a parent class, will tell the library that you want to use a parent function but also still keep the private `data` table for the current instance. This means that if a child and a parent class both have implementations of the same function (where both functions have the same key/name), the parent function will be called *and* the private data sent to the function will be the original, child object.
 
 ```lua
 local LibMayronObjects = LibStub:GetLibrary("LibMayronObjects");
@@ -423,12 +422,12 @@ end
 local instance = SuperChild();
 
 assert(instance:Print() == "This is SuperChild!");
-assert(instance:Parent():Print() == "This is Child!");
-assert(instance:Parent():Parent():Print() == "This is Parent!");
-assert(instance:Parent():Parent():Parent():Print() == "This is SuperParent!");
+assert(instance.Parent:Print() == "This is Child!");
+assert(instance.Parent.Parent:Print() == "This is Parent!");
+assert(instance.Parent.Parent.Parent:Print() == "This is SuperParent!");
 ```
 
-Line 10 will print "SuperChild", because line 35 passes the private instance data belonging to the SuperChild instance object, through the chain of `Parent()` calls, to the SuperParent class.
+Line 10 will print "SuperChild", because line 35 passes the private instance data belonging to the SuperChild instance object, through the chain of `Parent` references, to the SuperParent class.
 
 All of the assert functions in this example will not trigger an error. This shows that each function implementation is being called correctly.
 
@@ -538,11 +537,6 @@ Returns the class name (string).
 @param objectName (string): The class or interface name.
 
 Returns a boolean value indicating if the instance type is directly, or indirectly, the same type as the objectName supplied. If the class of the instance inherits from a parent (or a parent's parent, etc...), or implements an interface whose name is equal to the objectName argument, then the instance is said to be of that type and true will be returned.
-```
-
-## Object:Parent()
-```
-Returns the parent class ready to be used with a parent function. Usually, you cannot call a non-static function on a class object, however the original private instance data from the instance object that called the Parent() function (or chain of Parent() functions) is passed along to the final function call.
 ```
 
 ## Object:Equals(other)
