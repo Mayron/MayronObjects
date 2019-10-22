@@ -491,7 +491,7 @@ end
 
 # 10: Attributes
 
-You can assign attributes to class functions (methods). These are pre-defined classes that run code inside an `OnExecute` function before the class function is called. These `OnExecute` functions are called with the instance, the instance private data, the name of the function to be called, and all parameters the function is going to be called with. Therefore, you can apply pre-function execution logic and evne return `false` to cancel the function call. A useful example of this is to cancel the execution of a function if the player is in combat. An attribute has already been built to add this functionality and can be found in the library inside the `Attributes` folder:
+You can assign attributes to class functions (methods). These are pre-defined classes that run code inside an `OnExecute` function before the class function is called. These `OnExecute` functions are called with the instance, the instance private data, the name of the function to be called, and all parameters the function is going to be called with. Therefore, you can apply pre-function execution logic and even return `false` to cancel the function call. A useful example of this is to cancel the execution of a function if the player is in combat. An attribute has already been built to add this functionality and can be found in the library inside the `Attributes` folder:
 
 ```lua
 -- Import the attributes package:
