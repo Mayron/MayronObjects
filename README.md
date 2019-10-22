@@ -133,14 +133,39 @@ MyPackage:DefineReturns("any", "function", "?boolean");
 
 ## 4.2: Object and Widget Names as Function Parameters and Return Types
 
-Because all objects inherit the `GetObjectType()` function from the Object class, you can also validate parameter and return values to check whether or not they are of a certain class type:
+When LibMayronObjects validates the type of an object it uses the `GetObjectType()` method. All objects created with this library inherit the `GetObjectType()` function from the Object class (see section 12). Because Blizzard widgets (such as Frame, Button, Texture, etc...) also have a `GetObjectType()` method, you can also use LibMayronObjects to test for both the type of object and the type of widget. 
 
 ```lua
 MyPackage:DefineParams("Frame", "Button", "?MySlider");
-MyPackage:DefineReturns("IHandler", "MyClass", "?SomeWidget");
+MyPackage:DefineReturns("Handler", "MyClass", "?SomeWidget");
 ```
 
-## 4.3: Default Primative Parameter Values
+## 4.3: Parent Classes and Interfaces as Function Parameters and Return Types
+
+If a class implements an interface (see section 8) then you can use the interface name as the type of object to see if an object that was passed to the function call implements the given interface. Similarly, if a class has a parent class (see section 7) then you can use the parent class type as a parameter definition and any child class from any level (if the parent class also has a parent, etc...) will pass the validation test.
+
+```lua
+local Parent = MyPackage:CreateClass("Parent"); 
+local Child = MyPackage:CreateClass("Child", Parent);
+local SomeClass = MyPackage:CreateClass("SomeClass");
+
+-- an interface (see section 8 for full implementation details):
+local IComponent = MyPackage:CreateInterface("IComponent", { ... });
+local ComponentClass = MyPackage:CreateClass("Child", nil, "IComponent");
+
+MyPackage:DefineParams("Parent", "IComponent");
+function SomeClass:Foo(obj)
+    -- do stuff
+end
+
+local someInstance = SomeClass();
+local child = Child();
+local component = ComponentClass();
+
+someInstance:Foo(child, component); -- this is allowed
+```
+
+## 4.4: Default Primative Parameter Values
 
 Since update 3.0, you can now add default parameters. If this function is called without any parameters then message will be assigned the value "foo bar" and value will be assigned the value 14:
 
@@ -153,7 +178,7 @@ end
 
 Of course, if this method was called with 2 values supplied then the default values will be ignored. Using the optional syntax `"?"` at the front of the value type is not required if a default parameter has been specified.
 
-## 4.4: Default Complex Parameter Values
+## 4.5: Default Complex Parameter Values
 
 The above approach in section 4.3 works well for simple values that can be parsed from a string, but more complicated parameter types will struggle to be parsed from strings, such as widgets/frames, tables and functions. For this, use the following approach:
 
@@ -238,7 +263,7 @@ local Animator = WidgetsPackage:Get("Animator");
 
 Line 14 shows how you can import just one entity. Lines 16 - 21 show how you can import an entire package and then use the Package's Get function to retrieve individual entities. You can also create new entities to be added to the package that you have imported.
 
-# 7: Constructors and Destructors
+# 7: Parent Classes, Constructors and Destructors
 
 A class can be assigned a constructor and a destructor. A constructor is a function that is called when an instance is first created from that class. A destructor is called either by the garbage collector if the reference for an instance ceases to exist, or by explicitly calling `Destroy()` on the instance.
 
@@ -256,7 +281,7 @@ function Parent:__Construct(data)
     data.Dialog = "I am a parent.";
 end
 
-local Child = MyPackage:CreateClass("Child", Parent);
+local Child = MyPackage:CreateClass("Child", Parent); -- line 14
 
 function Child:__Construct(data)
     data.Dialog = "I am a child!";
@@ -274,7 +299,9 @@ child:Talk(); -- prints "I am a child!"
 child:Destroy(); -- prints "Child object Destroyed!"
 ```
 
-The private instance data from the child object is passed to the parent function. This is why line 27 prints "I am a child!" and not "I am a parent.". `__Construct` and `__Destruct` do not need to be manually called. They are implicitly called by LibMayronObjects when required.
+Line 14 shows that when creating a class you can assign that class a parent class. The 1st argument of `CreateClass` is the name of the class being created (called the type of the class), the 2nd argument specifies the parent class and any additional arguments can be interfaces for the class to implement. All arguments except the first can either be the physical class/interface or a string used to allow LibMayronObjects to import it when assigning the class/interface to the newly created class.
+
+Using a parent class means that you can use the parent class methods on the interface. For example, the Child class in the code above has no `Talk()` method, but the parent class does. The private instance data from the child object is passed to the parent function when calling `Talk()` on the instance. This is why line 27 prints "I am a child!" and not "I am a parent.". `__Construct` and `__Destruct` do not need to be manually called. They are implicitly called by LibMayronObjects when required.
 
 # 8: Creating an Interface
 
