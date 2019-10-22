@@ -339,7 +339,7 @@ ComponentsPackage:CreateInterface("IComponent", {
     Update = "function";
     SetEnabled = {type = "function"; params = "boolean" };
     IsEnabled = {type = "function"; returns = "boolean"};
-    __Construct = {type = "function", params = {"?table", "IEventHandler", "?Frame"}}
+    __Construct = {type = "function", params = {"?table", "IEventHandler", "?Frame"}};
 });
 
 local Component = MyPackage:CreateClass("Component", nil, "ComponentsPackage.IComponent");
@@ -367,6 +367,24 @@ end
 ```
 
 All functions must be implemented for each interface attached to the class. You cannot implement from 2 or more interfaces that share the same function name as this would cause a clash and result in an error.
+
+When calling `CreateInterface()` we pass an interface definition table as the 2nd argument. In the example above we declare 4 functions (one being the constructor). All 4 of these must then be implemented by the class that is assigned the interface. If you do not wish to define and parameter or return types for a function then you can simply assign the function name to the value `"function"`:
+
+```lua
+Update = "function";
+```
+
+If you want to assign a parameter and/or return type for that function then you should use a table:
+
+```lua
+SetEnabled = {type = "function"; params = "boolean" };
+```
+
+If you want to assign multiple parameter and/or return types then `params` and/or `returns` should be assigned a table as well:
+
+```lua
+__Construct = {type = "function", params = {"?table", "IEventHandler", "?Frame"}};
+```
 
 You can implement many interfaces, but only inherit from one parent class:
 
