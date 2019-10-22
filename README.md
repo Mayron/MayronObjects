@@ -68,9 +68,9 @@ function MyClass:SetTimeRemaining(data, timeRemaining)
     data.timeRemaining = timeRemaining;
 end
 
-local Instance = MyClass();
-Instance:SetTimeRemaining(60);
-local timeRemaining = Instance:GetTimeRemaining();
+local instance = MyClass();
+instance:SetTimeRemaining(60); -- line 15
+local timeRemaining = instance:GetTimeRemaining(); -- line 16
 ```
 
 Each instance has a private `data` table that you can use to store private instance data. It is automatically passed in as the first argument to any instance (non-static) function call and so you do not have to manually pass it to the function. The data table will always be the first argument of an instance-level function even if you do not require it (you can think of this special table in a similar way to how the `self` referential keyword is always available to you when calling a table function using `:`). 
@@ -91,12 +91,12 @@ local MyPackage = LibMayronObjects:CreatePackage("MyPackage");
 
 local MyClass = MyPackage:CreateClass("MyClass");
 
-MyPackage:DefineReturns("number");
+MyPackage:DefineReturns("number"); -- line 6
 function MyClass:GetTimeRemaining(data)
     return data.timeRemaining;
 end
 
-MyPackage:DefineParams("number");
+MyPackage:DefineParams("number"); -- line 11
 function MyClass:SetTimeRemaining(data, timeRemaining)
     data.timeRemaining = timeRemaining;
 end
@@ -109,7 +109,9 @@ local timeRemaining = Instance:GetTimeRemaining();
 
 A package contains information relating to classes and function definitions, therefore declaring parameter and return value types must be done using the package object.
 
-Lines 10 and 11 must be included straight before declaring the function, otherwise, the instructions for strict typing will not be set to the correct function definition. However, as mentioned previously, you can also choose to not include the definition calls at all as enabling strict typing of parameter and return values is optional. The first argument (the private instance data) can be ignored when creating strict typing definitions. Line 10 states that the first argument passed to the SetTimeRemaining function must be of type "number", which in this case it is. *Any* developer using the class must comply with this enforced rule. Line 11 states that the return value must be of type "number". The developer who created the class must comply with his own promise by returning a string value.
+Lines 6 and 11 must be included straight before declaring the function, otherwise, the instructions for strict typing will not be set to the correct function definition. However, as mentioned previously, you can also choose to not include the definition calls at all as enabling strict typing of parameter and return values is optional. The first argument (the private instance data) should be ignored when creating strict typing definitions. 
+
+Line 11 states that the first argument passed to the `SetTimeRemaining` function must be of type `"number"`, which in this case it is. *Any* developer using the class must comply with this enforced rule. Line 11 states that the return value must be of type `"number"`. The developer who created the class must comply with their own promise by returning a number value.
 
 You can also declare that any value should be returned, as long as it is not nil:
 
@@ -119,8 +121,6 @@ function MyClass:SetTimeRemaining(data, timeRemaining)
     data.timeRemaining = timeRemaining;
 end
 ```
-
-In this case, the return value and first argument can be a table, number, string, boolean or function, but not nil.
 
 ## 4.1: Optional Function Parameters and Return Types 
 
