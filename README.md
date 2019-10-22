@@ -124,7 +124,7 @@ end
 
 ## 4.1: Optional Function Parameters and Return Types 
 
-Additionally, you can declare optional parameter arguments and return values by adding a question mark `"?"` character in front of the definition type. However, *they must be declared at the end of the declaration list* after any non-optional definitions:
+Additionally, you can declare optional parameter arguments and return values by adding a question mark `"?"` character in front of the definition type. The recommended convention is to declare optional parameters at the end of the declaration list but this is optional:
 
 ```lua
 MyPackage:DefineParams("string", "number", "?table");
