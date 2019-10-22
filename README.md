@@ -77,7 +77,7 @@ Each instance has a private `data` table that you can use to store private insta
 
 This data is only accessible from within the function body unless it is made explicitly accessible by the developer who created the class. Using this technique of data encapsulation ensures that outside code cannot access the instance's private data which helps to prevent outside interference against important class logic.
 
-You can still assign values to the `self` referential variable so that outside code can access these values (you can think of this as public instance fields), or you can use setter and getter functions to retrieve private fields, as shown in the example above. An external value is passed to the setter function (SetTimeRemaining) on line 15 and can be retrieved using a getter function as shown on line 16.
+You can still assign values to the `self` referential variable so that outside code can access these values (you can think of these as public fields and data table values as private fields), or you can use setter and getter functions to retrieve private fields, as shown in the example above. An external value is passed to the setter function (SetTimeRemaining) on line 15 and can be retrieved using a getter function as shown on line 16.
 
 # 4: Function Definitions
 
