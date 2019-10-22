@@ -479,13 +479,13 @@ You can also use the special `Super()`, functiona call as a shortcut for calling
 ```lua
 function Parent:__Construct(data, settings)
     data.frame = CreateFrame("Frame");
-	data.frame:SetSize(100, 50);
-	data.frame:SetPoint(unpack(settings.position));
+    data.frame:SetSize(100, 50);
+    data.frame:SetPoint(unpack(settings.position));
 end
 
 function Child:__Construct(data, settings)
     self:Super(settings); -- this will create the frame	
-	data.frame:SetScript("OnEnter", child_OnEnter);
+    data.frame:SetScript("OnEnter", child_OnEnter);
 end
 ```
 
