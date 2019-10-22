@@ -336,17 +336,9 @@ local ComponentsPackage = LibMayronObjects:CreatePackage("ComponentsPackage", "M
 
 -- can be imported using lib:Import("MyEngine.ComponentsPackage.IComponent");
 ComponentsPackage:CreateInterface("IComponent", {
-    -- this function must be implemented by the class with no definition for parameters or return values
     Update = "function";
-
-    -- this function must be implemented by the class and must accept 1 parameter of type "boolean"
     SetEnabled = {type = "function"; params = "boolean" };
-
-    -- this function must be implemented by the class and must return 1 value value of type boolean
     IsEnabled = {type = "function"; returns = "boolean"};
-
-    -- The constructor that defined 3 parameters (only IEventHandler is required):
-    -- a table, an IEventHandler interface object, and a Frame widget
     __Construct = {type = "function", params = {"?table", "IEventHandler", "?Frame"}}
 });
 
@@ -360,7 +352,7 @@ function Component:SetEnabled(data, enabled)
     data.enabled = enabled; -- we can assume that the enabled parameter must be a boolean
 end
 
--- We do not need to reassign a function definition using `DefineParams` because
+-- We should not reassign a function definition using `DefineParams` because
 -- it uses the interface definition which cannot be replaced.
 function Component:IsEnabled(data)
     -- this function must return a boolean value as specified by the interface definition
@@ -374,7 +366,7 @@ function Component:__Construct(data, labels, eventHandler, frame)
 end
 ```
 
-All functions must be implemented for each interface attached to the class. You cannot implement from 2 or more interfaces that share the same function name as this would cause a clash.
+All functions must be implemented for each interface attached to the class. You cannot implement from 2 or more interfaces that share the same function name as this would cause a clash and result in an error.
 
 You can implement many interfaces, but only inherit from one parent class:
 
