@@ -1,3 +1,2 @@
-# This documentation has moved!
-
-It can now be found at https://mayronui.com/p/lib-mayron-objects
+For the full maintained documentation, please visit:
+https://mayronui.com/p/lib-mayron-objects
