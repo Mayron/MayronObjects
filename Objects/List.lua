@@ -1,19 +1,20 @@
 -- luacheck: ignore self 143 631
 local Lib = _G.LibStub:GetLibrary("LibMayronObjects"); ---@type LibMayronObjects
 
-if (Lib:Import("Framework.System.Collections.List", true)) then return end
-
-local table, ipairs = _G.table, _G.ipairs;
+if (Lib:Import("Framework.System.Collections.List<T>", true)) then return end
 local Collections = Lib:Import("Framework.System.Collections");
 
 ---@class List : Object
-local List = Collections:CreateClass("List");
+local List = Collections:CreateClass("List<T>");
+
+local table, ipairs = _G.table, _G.ipairs;
 
 function List:__Construct(data, ...)
   data.values = Lib:PopTable();
   self:AddAll(...);
 end
 
+Collections:DefineParams("T", "?number");
 function List:Add(data, value, index)
   if (index) then
     table.insert(data.values, index, value);
@@ -22,10 +23,12 @@ function List:Add(data, value, index)
   end
 end
 
+Collections:DefineParams("number");
 function List:Remove(data, index)
   table.remove(data.values, index);
 end
 
+Collections:DefineParams("T", "?boolean");
 function List:RemoveByValue(data, value, allValues)
   local index = 1;
   local value2 = data.values[index];
@@ -45,12 +48,14 @@ function List:RemoveByValue(data, value, allValues)
   end
 end
 
+Collections:DefineParams("function");
 function List:ForEach(data, func)
   for index, value in ipairs(data.values) do
     func(index, value);
   end
 end
 
+Collections:DefineParams("function");
 function List:Filter(data, predicate)
   local index = 1;
   local value = data.values[index];
@@ -66,8 +71,10 @@ function List:Filter(data, predicate)
   end
 end
 
+Collections:DefineParams("function");
+Collections:DefineReturns("boolean");
 function List:Select(data, predicate)
-  local selected = {};
+  local selected = Lib:PopTable();
 
   for index, value in ipairs(data.values) do
     if (predicate(index, value)) then
@@ -91,10 +98,14 @@ do
   end
 end
 
+Collections:DefineParams("number");
+Collections:DefineReturns("?T");
 function List:Get(data, index)
   return data.values[index];
 end
 
+Collections:DefineParams("T");
+Collections:DefineReturns("boolean");
 function List:Contains(data, value)
   for _, value2 in ipairs(data.values) do
     if (value2 == value) then
@@ -110,10 +121,12 @@ function List:Empty(data)
   end
 end
 
+Collections:DefineReturns("boolean");
 function List:IsEmpty(data)
   return #data.values == 0;
 end
 
+Collections:DefineReturns("number");
 function List:Size(data)
   return #data.values;
 end
@@ -130,6 +143,7 @@ do
     end
   end
 
+  Collections:DefineReturns("table");
   function List:ToTable(data)
     local copy = Lib:PopTable();
     AddTable(data.values, copy);

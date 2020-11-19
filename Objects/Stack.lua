@@ -2,12 +2,12 @@
 local Lib = _G.LibStub:GetLibrary("LibMayronObjects"); ---@type LibMayronObjects
 
 if (Lib:Import("Framework.System.Collections.Stack<T>", true)) then return end
-
-local unpack, ipairs = _G.unpack, _G.ipairs;
 local Collections = Lib:Import("Framework.System.Collections");
 
 ---@class Stack : Object
 local Stack = Collections:CreateClass("Stack<T>");
+
+local unpack = _G.unpack;
 
 function Stack:__Construct(data, ...)
   data.tbl = Lib:PopTable();

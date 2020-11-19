@@ -2,17 +2,17 @@
 local Lib = _G.LibStub:GetLibrary("LibMayronObjects"); ---@type LibMayronObjects
 
 if (Lib:Import("Framework.System.Collections.Map", true)) then return end
-
-local pairs = _G.pairs;
 local Collections = Lib:Import("Framework.System.Collections");
 
 ---@class Map : Object
 local Map = Collections:CreateClass("Map");
-local List = Collections:Get("List");
+local List = Collections:Get("List<T>");
+
+local pairs = _G.pairs;
 
 Collections:DefineParams("?table");
 function Map:__Construct(data, tbl)
-  data.values = {};
+  data.values = Lib:PopTable();
 
   if (tbl) then
     for key, value in pairs(tbl) do
@@ -115,7 +115,7 @@ function Map:Empty(data)
 end
 
 function Map:IsEmpty(_)
-  return self:Size() == 0;
+    return self:Size() == 0;
 end
 
 function Map:Size(data)
@@ -127,7 +127,7 @@ function Map:Size(data)
 end
 
 function Map:ToTable(data)
-  local copy = {};
+  local copy = Lib:PopTable();
 
   for key, value in pairs(data.values) do
     copy[key] = value;
@@ -137,7 +137,7 @@ function Map:ToTable(data)
 end
 
 function Map:GetValueList(data)
-  local list = List();
+  local list = List:Of("any")();
   for _, value in pairs(data.values) do
     list:Add(value);
   end
@@ -145,7 +145,7 @@ function Map:GetValueList(data)
 end
 
 function Map:GetKeyList(data)
-  local list = List();
+  local list = List:Of("any")();
   for key, _ in pairs(data.values) do
     list:Add(key);
   end

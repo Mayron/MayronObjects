@@ -2,26 +2,27 @@
 local Lib = _G.LibStub:GetLibrary("LibMayronObjects"); ---@type LibMayronObjects
 
 if (Lib:Import("Framework.System.Collections.LinkedList", true)) then return end
-
-local tostring, print = _G.tostring, _G.print;
 local Collections = Lib:CreatePackage("Collections", "Framework.System");
 
 ---@class LinkedList : Object
 local LinkedList = Collections:CreateClass("LinkedList");
+
+local tostring, print, table, setmetatable =
+  _G.tostring, _G.print, _G.table, _G.setmetatable;
 
 local Node = {};
 local LinkedListData = {};
 
 function LinkedList:__Construct(data, ...)
   for _, value in Lib:IterateArgs(...) do
-      self:AddToBack(value);
+    self:AddToBack(value);
   end
 
   LinkedListData[tostring(self)] = data;
 end
 
 function LinkedList:__Destruct()
-    self:Clear();
+  self:Clear();
 end
 
 ---@return string @A string containing the items of the LinkedList.
@@ -30,11 +31,11 @@ function LinkedList:ToString()
   local str = " [";
 
   for id, value in self:Iterate() do
-      str = str..tostring(value);
+    str = str..tostring(value);
 
-      if (id < self:GetSize()) then
-          str = str..", ";
-      end
+    if (id < self:GetSize()) then
+      str = str..", ";
+    end
   end
 
   return name..str.."]";
@@ -58,7 +59,7 @@ end
 
 ---@return boolean @If true, the LinkedList contains no items.
 function LinkedList:IsEmpty(data)
-    return data.front == nil;
+  return data.front == nil;
 end
 
 ---Add a value to the back of the LinkedList.
@@ -123,7 +124,6 @@ function LinkedList:Remove(data, value)
       node:Destroy();
       return true;
     end
-
     node = node.next
   until (not node);
 
@@ -174,7 +174,7 @@ function LinkedList:Unpack(_, n)
 
   for id, value in self:Iterate() do
     if (n <= id) then
-      _G.table.insert(values, value);
+      table.insert(values, value);
     end
   end
 
