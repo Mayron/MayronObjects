@@ -4,7 +4,7 @@ local lib = _G.LibStub:GetLibrary("LibMayronObjects");
 local function VerifyExpectedErrors(expectedErrors, test)
     lib:SetSilentErrors(true);
 
-    test();
+    pcall(function() test() end);
 
     assert(lib:GetNumErrors() == expectedErrors, string.format(
         "Should throw %s errors but got %d", expectedErrors, lib:GetNumErrors()));
@@ -456,7 +456,7 @@ local function Inheritance_Test3() -- luacheck: ignore
 
     local Child = TestPackage:CreateClass("Child", Parent);
 
-    VerifyExpectedErrors(2, function()
+    VerifyExpectedErrors(1, function()
         local instance = Child();
         instance:Run(123); -- passing a string instead of a number
     end);
@@ -486,7 +486,7 @@ local function Inheritance_Test4() -- luacheck: ignore
     local Child = TestPackage:CreateClass("Child", Parent);
     local SuperChild = TestPackage:CreateClass("SuperChild", Child);
 
-    VerifyExpectedErrors(2, function()
+    VerifyExpectedErrors(1, function()
         local instance = SuperChild();
         instance:Run(123);
     end);
@@ -509,7 +509,7 @@ local function Inheritance_Test5() -- luacheck: ignore
     local Child = TestPackage:CreateClass("Child", Parent);
     local SubChild = TestPackage:CreateClass("SubChild", Child);
 
-    VerifyExpectedErrors(2, function()
+    VerifyExpectedErrors(1, function()
         local instance = SubChild();
         instance:Run(123);
     end);
@@ -1229,7 +1229,7 @@ local function DefaultParams_Test1()
     local testInstance = TestClass();
     testInstance:AssertDefaults();
 
-    print("DefaultParams_Test1 Started");
+    print("DefaultParams_Test1 Successful!");
 end
 
 local function DefaultParams_Test2()
@@ -1253,7 +1253,106 @@ local function DefaultParams_Test2()
 
     testInstance:AssertDefaults("new message", nil, 45, "hello", {msg = "new message 2"});
 
-    print("DefaultParams_Test2 Started");
+    print("DefaultParams_Test2 Successful!");
+end
+
+local function ProtectedClassProperties_Test1()
+  print("ProtectedClassProperties_Test1 Started");
+
+  local TestPackage = lib:CreatePackage("ProtectedClassProperties_Test1");
+  local TestClass = TestPackage:CreateClass("TestClass");
+
+  -- should not be allowed
+  VerifyExpectedErrors(1, function()
+    TestClass.Static = "something";
+  end);
+
+  -- should not be allowed
+  VerifyExpectedErrors(1, function()
+    TestClass.Private = "something";
+  end);
+
+  VerifyExpectedErrors(1, function()
+    TestClass.Anything = "something";
+  end);
+
+  print("ProtectedClassProperties_Test1 Successful!");
+end
+
+local function PrivateInstanceFunctions_Test1()
+  print("PrivateInstanceFunctions_Test1 Started");
+
+  local TestPackage = lib:CreatePackage("PrivateInstanceFunctions_Test1");
+  local TestClass = TestPackage:CreateClass("TestClass");
+
+  TestPackage:DefineParams("string");
+  function TestClass:SetPrefix(data, prefix)
+    data.prefix = prefix;
+  end
+
+  TestPackage:DefineParams("string");
+  TestPackage:DefineReturns("string");
+  function TestClass.Private:PrintWithPrefix(data, message)
+    assert(message == "Bar", string.format("Unexpected message %s", tostring(message)))
+    print("Private: ", data.prefix .. ", ", message);
+
+    return "success!";
+  end
+
+  function TestClass:PrintMessage(data, message)
+    -- Private functions are only accessible from the private data object using "Call"
+    local value = data:Call("PrintWithPrefix", message);
+
+    assert(value == "success!", string.format("Unexpected return value %s", tostring(value)));
+
+    VerifyExpectedErrors(1, function()
+      data:Call("PrintWithPrefix", 123);
+    end);
+  end
+
+  local test = TestClass();
+  test:SetPrefix("Foo");
+  test:PrintMessage("Bar");
+
+  assert(test.Private == nil, "You should not be able to access it this way!");
+
+  VerifyExpectedErrors(1, function()
+    -- should not be able to access it
+    TestClass.Private:PrintWithPrefix({}, "hi");
+  end);
+
+  VerifyExpectedErrors(1, function()
+    -- should not be able to access it
+    TestClass.Private:PrintWithPrefix("hi");
+  end);
+
+  print("PrivateInstanceFunctions_Test1 Successful!");
+end
+
+local function StaticFunctions_Test1()
+  print("StaticFunctions_Test1 Started");
+
+  local TestPackage = lib:CreatePackage("StaticFunctions_Test1");
+  local TestClass = TestPackage:CreateClass("TestClass");
+
+  TestPackage:DefineParams("string");
+  TestPackage:DefineReturns("string");
+  function TestClass.Static:PrintWithPrefix(message)
+    print(message)
+    return "success!";
+  end
+
+  function TestClass:PrintMessage(_, message)
+    TestClass.Static:PrintWithPrefix("Inside: " .. message);
+    self.Static:PrintWithPrefix("Inside with instance: " .. message);
+  end
+
+  local test = TestClass();
+  test:PrintMessage("FooBar");
+  TestClass.Static:PrintWithPrefix("Outside");
+  test.Static:PrintWithPrefix("Outside with instance");
+
+  print("StaticFunctions_Test1 Successful!");
 end
 
 ---------------------------------
@@ -1301,3 +1400,6 @@ end
 -- MemoryLeak_Test2();
 -- DefaultParams_Test1();
 -- DefaultParams_Test2();
+-- ProtectedClassProperties_Test1();
+-- PrivateInstanceFunctions_Test1();
+-- StaticFunctions_Test1();
