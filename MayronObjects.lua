@@ -1,16 +1,49 @@
 -- luacheck: ignore self 143 631
 local addOnName = ...;
+local type, tonumber, pairs = _G.type, _G.tonumber, _G.pairs;
 
----@type LibMayronObjects
-local Lib = _G.LibStub:NewLibrary("LibMayronObjects", 3.03);
+_G.MayronObjects = _G.MayronObjects or {
+  versions = {};
+
+  NewFramework = function(self, version)
+    version = tonumber((version:gsub("%.+", "")));
+    self.last = version;
+
+    if (not self.versions[version]) then
+      local framework = {};
+      self.versions[version] = framework;
+      return framework;
+    end
+  end;
+
+  GetFramework = function(self, version)
+    if (version) then
+      version = version:gsub("%s+", ""):lower();
+
+      if (version == "latest") then
+        for key, _ in pairs(self.versions) do
+          version = key;
+        end
+      else
+        version = tonumber((version:gsub("%.+", "")));
+      end
+
+      self.last = version;
+    end
+
+    return self.versions[self.last];
+  end;
+};
+
+---@type MayronObjects
+local Lib = _G.MayronObjects:NewFramework("3.1.0");
 
 if (not Lib) then return end
 
-local error, unpack, next = _G.error, _G.unpack, _G.next;
-local type, setmetatable, table, string = _G.type, _G.setmetatable, _G.table, _G.string;
+local error, unpack, next, ipairs = _G.error, _G.unpack, _G.next, _G.ipairs;
+local setmetatable, table, string = _G.setmetatable, _G.table, _G.string;
 local getmetatable, select, pcall = _G.getmetatable, _G.select, _G.pcall;
-local tostring, collectgarbage, pairs, print = _G.tostring, _G.collectgarbage, _G.pairs, _G.print;
-local tonumber, ipairs = _G.tonumber, _G.ipairs;
+local tostring, collectgarbage, print = _G.tostring, _G.collectgarbage, _G.print;
 
 Lib.Types = {};
 Lib.Types.Table    = "table";
@@ -34,9 +67,9 @@ local ProxyStack = {};
 --]]
 ProxyStack.funcStrings = {};
 
-local Core = {}; -- holds all private Lib core functions for internal use
+local Core = {}; -- holds all private core functions for internal use
 Core.Lib = Lib;
-Core.PREFIX = "|cffffcc00LibMayronObjects: |r"; -- this is used when printing out errors
+Core.PREFIX = "|cffffcc00MayronObjects: |r"; -- this is used when printing out errors
 Core.ExportedPackages = {}; -- contains all exported packages
 Core.DebugMode = false;
 
@@ -49,7 +82,7 @@ Core.DebugMode = false;
 local Package;
 
 --------------------------------------------
--- LibMayronObjects Functions
+-- MayronObjects Functions
 --------------------------------------------
 function Lib:IsTable(value)
   return type(value) == Lib.Types.Table;
@@ -451,7 +484,7 @@ function Lib:SetErrorHandler(errorHandler)
   Core.errorHandler = errorHandler;
 end
 
----Do NOT use this unless you are a LibMayronObjects developer.
+---Do NOT use this unless you are a MayronObjects developer.
 ---@param debug boolean @Set the Library to debug mode.
 function Lib:SetDebugMode(debug)
   Core.DebugMode = debug;
@@ -757,7 +790,7 @@ do
     local friends          = Lib:PopTable(); -- friend classes can access instance private data of this class
     local classController  = Lib:PopTable(); -- holds special Lib data to control class
     local privateFunctions = Lib:PopTable(); -- holds all private class functions
-    local staticData      = Lib:PopTable(); -- holds all static class functions
+    local staticData       = Lib:PopTable(); -- holds all static class functions
 
     classController.isClass = true;
     classController.objectName = className;
@@ -1410,7 +1443,6 @@ do
 
     -- check that class implements interface functions:
     for funcKey, _ in pairs(classController.definitions) do
-      -- TODO: Can this be removed?
       if (not (string.match(funcKey, "Private.") or string.match(funcKey, "Static."))) then
         local implementedFunc = classController.class[funcKey];
         Core:Assert(Lib:IsFunction(implementedFunc), invalidClassValueErrorMessage, classController.objectName, funcKey);
