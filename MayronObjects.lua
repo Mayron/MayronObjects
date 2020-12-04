@@ -1112,15 +1112,6 @@ do
       return self:GetPrivateInstanceData(friendInstance);
     end
 
-    privateData.Embed = function(_, values)
-      Lib:Assert(Lib:IsTable(values),
-        "Failed to embed value into private data - bad argument #1 (table expected, got %s)", type(values));
-
-      for key, value in pairs(values) do
-        privateData[key] = value;
-      end
-    end
-
     privateData.Call = function(_, privateFunctionName, ...)
       Lib:Assert(Lib:IsString(privateFunctionName),
         "Failed to call private function - bad argument #1 (string expected, got %s)", type(privateFunctionName));
