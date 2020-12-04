@@ -822,11 +822,11 @@ do
       self:SetInterfaces(classController, ...);
 
       -- ProxyClass functions --------------------------
-      staticData.AddFriendClass = function(_, friendClassName)
+      class.Static.AddFriendClass = function(_, friendClassName)
         friends[friendClassName] = true;
       end
 
-      staticData.IsFriendClass = function(_, friendClassName)
+      class.Static.IsFriendClass = function(_, friendClassName)
         if (friendClassName == className) then
           return true;
         end
@@ -834,19 +834,19 @@ do
         return friends[friendClassName];
       end
 
-      staticData.OnIndexChanged = function(_, callback)
+      class.Static.OnIndexChanged = function(_, callback)
         classController.indexChangedCallback = callback;
       end
 
-      staticData.OnIndexChanging = function(_, callback)
+      class.Static.OnIndexChanging = function(_, callback)
         classController.indexChangingCallback = callback;
       end
 
-      staticData.OnIndexed = function(_, callback)
+      class.Static.OnIndexed = function(_, callback)
         classController.indexedCallback = callback;
       end
 
-      staticData.OnIndexing = function(_, callback)
+      class.Static.OnIndexing = function(_, callback)
         classController.indexingCallback = callback;
       end
 

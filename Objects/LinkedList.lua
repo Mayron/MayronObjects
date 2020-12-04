@@ -1,5 +1,5 @@
 -- luacheck: ignore self 143 631
-local Lib = _G.MayronObjects:GetFramework("3.1.0"); ---@type MayronObjects
+local Lib = _G.MayronObjects:GetFramework(); ---@type MayronObjects
 
 if (Lib:Import("Framework.System.Collections.LinkedList", true)) then return end
 local Collections = Lib:CreatePackage("Collections", "Framework.System");

@@ -1,5 +1,5 @@
 -- luacheck: ignore self 143 631
-local lib = _G.MayronObjects:GetFramework("3.1.0");
+local lib = _G.MayronObjects:GetFramework();
 
 local function VerifyExpectedErrors(expectedErrors, test)
   lib:SetSilentErrors(true);
@@ -1350,6 +1350,32 @@ local function StaticFunctions_Test1() -- luacheck: ignore
   print("StaticFunctions_Test1 Successful!");
 end
 
+local function FriendClasses_Test1() -- luacheck: ignore
+  print("FriendClasses_Test1 Started");
+
+  local TestPackage = lib:CreatePackage("FriendClasses_Test1");
+  local TestClass = TestPackage:CreateClass("TestClass");
+  local FriendClass = TestPackage:CreateClass("FriendClass");
+
+  TestClass.Static:AddFriendClass("FriendClass");
+  assert(TestClass.Static:IsFriendClass("FriendClass"), "Failed to set friend class");
+
+  function TestClass:__Construct(data)
+    data.sharedMessage = "for friends only!";
+  end
+
+  local test = TestClass();
+
+  function FriendClass:__Construct(data)
+    local testData = data:GetFriendData(test);
+    assert(testData.sharedMessage == "for friends only!", "Failed to get friend data");
+  end
+
+  local _ = FriendClass();
+
+  print("FriendClasses_Test1 Successful!");
+end
+
 ---------------------------------
 -- Run Tests:
 ---------------------------------
@@ -1398,3 +1424,4 @@ end
 -- ProtectedClassProperties_Test1();
 -- PrivateInstanceFunctions_Test1();
 -- StaticFunctions_Test1();
+-- FriendClasses_Test1();
