@@ -1147,7 +1147,7 @@ do
       self:CopyTableValues(otherInstanceData, privateData);
       classController.cloneFrom = nil;
     else
-      if (classController.class.__Construct) then
+      if (proxyInstance.__Construct) then
         -- call custom constructor here!
         proxyInstance:__Construct(...);
       end
