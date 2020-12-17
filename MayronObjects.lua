@@ -1713,7 +1713,7 @@ function Core:ValidateFunctionCall(definition, errorMessage, ...)
     if (definitionType:find("|")) then
       for _, singleDefinitionType in Framework:IterateArgs(strsplit("|", definitionType)) do
         singleDefinitionType = string.gsub(singleDefinitionType, "%s", "");
-        errorFound = self:ValidateValue(singleDefinitionType, realValue);
+        errorFound = self:ValidateValue(singleDefinitionType, realValue, defaultValue);
 
         if (not errorFound) then
           break;
@@ -2019,9 +2019,20 @@ local function ValidateDefinition(...)
   local defs = Framework:PopTable(...);
   local vararg;
 
-  for _, def in pairs(defs) do
+  for index = 1, select("#", ...) do
+    local def = defs[index];
+
     if (Framework:IsTable(def)) then
+      if (def[1] == nil) then
+        def[1] = "?any";
+      end
+
       def = def[1];
+    end
+
+    if (def == nil) then
+      def = "?any";
+      defs[index] = def;
     end
 
     if (not Framework:IsString(def)) then
