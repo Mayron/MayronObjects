@@ -149,6 +149,262 @@ local function DefineParams_Test2() -- luacheck: ignore
   print("DefineParams_Test2 Successful!");
 end
 
+local function VariableArgumentList_Test1() -- luacheck: ignore
+  print("VariableArgumentList_Test1 Started");
+
+  local TestPackage = lib:CreatePackage("VariableArgumentList_Test1", "Test");
+  local TestClass = TestPackage:CreateClass("TestClass");
+
+  TestPackage:DefineParams("string", "...number");
+  function TestClass:RunTest1(_, str, ...)
+    print("str: "..tostring(str)..", vararg: ", ...);
+  end
+
+  local instance = TestClass();
+
+  print("starting sub-test 1");
+  instance:RunTest1("value", 1, 2, 3, 4, 5);
+
+  VerifyExpectedErrors(1, function()
+    instance:RunTest1("value", 1, 2, 3, "error!", 5); -- should fail!
+  end);
+
+  VerifyExpectedErrors(1, function()
+    instance:RunTest1("value", 1, 2, 3, nil, 5); -- should fail!
+  end);
+
+  TestPackage:DefineParams("string", "...number|string");
+  function TestClass:RunTest2(_, str, ...)
+    print("str: "..tostring(str)..", vararg: ", ...);
+  end
+
+  print("starting sub-test 2");
+  instance:RunTest2("value", 1, 2, 3, 4, 5);
+  instance:RunTest2("value", 1, 2, 3, "allowed!", 5);
+
+  VerifyExpectedErrors(1, function()
+    instance:RunTest2("value", 1, 2, 3, nil, 5); -- should fail!
+  end);
+
+  -- You cannot specify default values when more than 1 type is allowed:
+  VerifyExpectedErrors(1, function()
+    TestPackage:DefineParams("string", "...number=12|string=not okay!?"); -- should fail!
+  end);
+
+  TestPackage:DefineParams("string=hi", "...number=99");
+  function TestClass:RunTest4(_, str, arg1, arg2, arg3, arg4, arg5)
+    assert(str == "hi");
+    assert(arg1 == 1);
+    assert(arg2 == 99, string.format("Expected arg2 to equal default value 99, got %s.", tostring(arg2)));
+    assert(arg3 == 2);
+    assert(arg4 == 99, string.format("Expected arg4 to equal default value 99, got %s.", tostring(arg4)));
+    assert(arg5 == 3);
+  end
+
+  print("starting sub-test 4");
+  instance:RunTest4(nil, 1, nil, 2, nil, 3);
+
+  TestPackage:DefineParams({"...table", { test = true } });
+  function TestClass:RunTest5(_, arg1, arg2, arg3, arg4, arg5)
+    assert(arg1.test == true);
+    assert(arg2.msg == "hi");
+    assert(arg3 == nil);
+    assert(arg4 == nil);
+    assert(arg5 == nil);
+  end
+
+  print("starting sub-test 5");
+  instance:RunTest5(nil, { msg = "hi"});
+
+  TestPackage:DefineParams({"...table", { test = true } });
+  function TestClass:RunTest6(_, arg1, arg2, arg3, arg4, arg5)
+    assert(arg1 == nil);
+    assert(arg2 == nil);
+    assert(arg3 == nil);
+    assert(arg4 == nil);
+    assert(arg5 == nil);
+  end
+
+  print("starting sub-test 6");
+  instance:RunTest6();
+
+  TestPackage:DefineParams("...number=99");
+  function TestClass:RunTest7(_, arg1, arg2, arg3, arg4, arg5)
+    assert(arg1 == 99, string.format("Expected arg1 to equal default value 99, got %s.", tostring(arg1)));
+    assert(arg2 == 99, string.format("Expected arg2 to equal default value 99, got %s.", tostring(arg2)));
+    assert(arg3 == 3, string.format("Expected arg3 to equal 3.", tostring(arg3)));
+    assert(arg4 == nil, string.format("Expected arg4 to equal nil.", tostring(arg4)));
+    assert(arg5 == nil, string.format("Expected arg5 to equal nil.", tostring(arg5)));
+  end
+
+  print("starting sub-test 7");
+  instance:RunTest7(nil, nil, 3, nil);
+
+  TestPackage:DefineParams("...number=99");
+  function TestClass:RunTest8(_, arg1, arg2, arg3, arg4, arg5)
+    assert(arg1 == nil, string.format("Expected arg1 to equal nil, got %s.", tostring(arg1)));
+    assert(arg2 == nil, string.format("Expected arg2 to equal nil, got %s.", tostring(arg2)));
+    assert(arg3 == nil, string.format("Expected arg3 to equal nil, got %s.", tostring(arg3)));
+    assert(arg4 == nil, string.format("Expected arg4 to equal nil, got %s.", tostring(arg4)));
+    assert(arg5 == nil, string.format("Expected arg5 to equal nil, got %s.", tostring(arg5)));
+  end
+
+  print("starting sub-test 8");
+  instance:RunTest8(nil, nil, nil);
+
+  TestPackage:DefineParams("string", "...?number");
+  function TestClass:RunTest9(_, str, ...)
+    print("str: "..tostring(str)..", vararg: ", ...);
+  end
+
+  print("starting sub-test 9");
+  instance:RunTest9("value", 1, 2, 3, nil, 5); -- allowed
+
+  TestPackage:DefineParams("...number|?string");
+  function TestClass:RunTest10(_, arg1, arg2, arg3, arg4, arg5)
+    assert(arg1 == 1)
+    assert(arg2 == "2")
+    assert(arg3 == 3)
+    assert(arg4 == nil)
+    assert(arg5 == 5)
+  end
+
+  print("starting sub-test 10");
+  instance:RunTest10(1, "2", 3, nil, 5); -- allowed
+
+  print("VariableArgumentList_Test1 Successful!");
+end
+
+local function VariableArgumentList_ReturnValues_Test1() -- luacheck: ignore
+  print("VariableArgumentList_ReturnValues_Test1 Started");
+
+  local TestPackage = lib:CreatePackage("VariableArgumentList_ReturnValues_Test1", "Test");
+  local TestClass = TestPackage:CreateClass("TestClass");
+
+  TestPackage:DefineReturns("string", "...number");
+  function TestClass:RunTest1()
+    return "value", 1, 2, 3;
+  end
+
+  local instance = TestClass();
+
+  print("starting sub-test 1");
+  local v1, v2, v3, v4, v5 = instance:RunTest1();
+  assert(v1 == "value");
+  assert(v2 == 1);
+  assert(v3 == 2);
+  assert(v4 == 3);
+  assert(v5 == nil);
+
+  TestPackage:DefineReturns("string", "...number|string");
+  function TestClass:RunTest2()
+    return "value", 1, "2", 3;
+  end
+
+  -- follow ... def with another value == error
+  VerifyExpectedErrors(1, function()
+    TestPackage:DefineReturns("string", "...number", "table"); -- should fail!
+  end);
+
+  print("starting sub-test 2");
+  v1, v2, v3, v4 = instance:RunTest2();
+  assert(v1 == "value");
+  assert(v2 == 1);
+  assert(v3 == "2");
+  assert(v4 == 3);
+
+  -- You cannot specify default values when more than 1 type is allowed:
+  VerifyExpectedErrors(1, function()
+    TestPackage:DefineReturns("string", "...number=12|string=not okay!?"); -- should fail!
+  end);
+
+  TestPackage:DefineReturns("string=hi", "...number=99");
+  function TestClass:RunTest4()
+    return nil, nil, 123;
+  end
+
+  print("starting sub-test 4");
+  v1, v2, v3, v4 = instance:RunTest4();
+  assert(v1 == "hi");
+  assert(v2 == 99);
+  assert(v3 == 123);
+  assert(v4 == nil);
+
+  TestPackage:DefineReturns({"...table", { test = true } });
+  function TestClass:RunTest5()
+    return nil, { msg = "hi"};
+  end
+
+  print("starting sub-test 5");
+  v1, v2 = instance:RunTest5();
+  assert(v1.test == true);
+  assert(v2.msg == "hi");
+
+  TestPackage:DefineReturns({"...table", { test = true } });
+  function TestClass:RunTest6() end
+
+  print("starting sub-test 6");
+  v1, v2, v3, v4 = instance:RunTest6();
+  assert(v1 == nil);
+  assert(v2 == nil);
+  assert(v3 == nil);
+  assert(v4 == nil);
+
+  TestPackage:DefineReturns("...number=99");
+  function TestClass:RunTest7()
+    return nil, nil, 1, nil, 2;
+  end
+
+  print("starting sub-test 7");
+  v1, v2, v3, v4, v5 = instance:RunTest7();
+  assert(v1 == 99);
+  assert(v2 == 99);
+  assert(v3 == 1);
+  assert(v4 == 99);
+  assert(v5 == 2);
+
+  TestPackage:DefineReturns("...number=99");
+  function TestClass:RunTest8()
+    return nil, nil, nil;
+  end
+
+  print("starting sub-test 8");
+  v1, v2, v3, v4, v5 = instance:RunTest8();
+  assert(v1 == nil, string.format("Expected v1 to equal nil, got %s.", tostring(v1)));
+  assert(v2 == nil, string.format("Expected v2 to equal nil, got %s.", tostring(v2)));
+  assert(v3 == nil, string.format("Expected v3 to equal nil, got %s.", tostring(v3)));
+  assert(v4 == nil, string.format("Expected v4 to equal nil, got %s.", tostring(v4)));
+  assert(v5 == nil, string.format("Expected v5 to equal nil, got %s.", tostring(v5)));
+
+  TestPackage:DefineReturns("string", "...?number");
+  function TestClass:RunTest9()
+    return "value", 1, 2, nil, 3;
+  end
+
+  print("starting sub-test 9");
+  v1, v2, v3, v4, v5 = instance:RunTest9(); -- allowed
+  assert(v1 == "value", string.format("Expected v1 to equal 'value', got %s.", tostring(v1)));
+  assert(v2 == 1, string.format("Expected v2 to equal 1, got %s.", tostring(v2)));
+  assert(v3 == 2, string.format("Expected v3 to equal 2, got %s.", tostring(v3)));
+  assert(v4 == nil, string.format("Expected v4 to equal nil, got %s.", tostring(v4)));
+  assert(v5 == 3, string.format("Expected v5 to equal 3, got %s.", tostring(v5)));
+
+  TestPackage:DefineReturns("...number|?string");
+  function TestClass:RunTest10()
+    return 1, "2", 3, nil, 5;
+  end
+
+  print("starting sub-test 10");
+  v1, v2, v3, v4, v5 = instance:RunTest10(1, "2", 3, nil, 5); -- allowed
+  assert(v1 == 1);
+  assert(v2 == "2");
+  assert(v3 == 3);
+  assert(v4 == nil);
+  assert(v5 == 5);
+
+  print("VariableArgumentList_ReturnValues_Test1 Successful!");
+end
+
 local function ImportPackage_Test1() -- luacheck: ignore
   print("ImportPackage_Test1 Started");
 
@@ -1237,9 +1493,9 @@ local function DefaultParams_Test1() -- luacheck: ignore
 
   TestPackage:DefineParams("string=foo bar", "number=14", {"string", "foo bar 2"}, {"number", 20}, {"table", defaultTable})
   function TestClass:AssertDefaults(_, arg1, arg2, arg3, arg4, arg5)
-    assert(arg1 == "foo bar", string.format("arg1 expected to be 'foo bar', got %s", arg1));
-    assert(arg2 == 14, string.format("arg2 expected to be 14, got %s", arg2));
-    assert(arg3 == "foo bar 2", string.format("arg3 expected to be 'foo bar 2', got %s", arg3));
+    assert(arg1 == "foo bar", string.format("arg1 expected to be 'foo bar', got %s", tostring(arg1)));
+    assert(arg2 == 14, string.format("arg2 expected to be 14, got %s", tostring(arg2)));
+    assert(arg3 == "foo bar 2", string.format("arg3 expected to be 'foo bar 2', got %s", tostring(arg3)));
     assert(arg4 == 20, string.format("arg4 expected to be 20, got %s", arg4));
     assert(type(arg5) == "table", string.format("arg5 expected to be of type table, got %s", type(arg5)));
     assert(arg5.msg == "foobar", string.format("arg5.msg expected to be 'foobar', got %s", arg5.msg));
@@ -1253,7 +1509,7 @@ end
 
 local function DefaultParams_Test2() -- luacheck: ignore
   print("DefaultParams_Test2 Started");
-  local TestPackage = lib:CreatePackage("DefaultParams_Test1");
+  local TestPackage = lib:CreatePackage("DefaultParams_Test2");
   local TestClass = TestPackage:CreateClass("TestClass");
 
   local defaultTable = {msg = "foobar"}
@@ -1408,6 +1664,8 @@ end
 -- DefineParams_Test1();
 -- DefineReturns_Test1();
 -- DefineParams_Test2();
+-- VariableArgumentList_Test1();
+-- VariableArgumentList_ReturnValues_Test1();
 -- ImportPackage_Test1();
 -- DuplicateClass_Test1();
 -- UsingParent_Test1();
