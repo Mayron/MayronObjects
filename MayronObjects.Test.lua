@@ -272,6 +272,18 @@ local function VariableArgumentList_Test1() -- luacheck: ignore
   print("starting sub-test 10");
   instance:RunTest10(1, "2", 3, nil, 5); -- allowed
 
+  -- variable argument lists are NOT optional - at least 1 number must be passed to the method
+  TestPackage:DefineParams("string", "...number");
+  function TestClass:RunTest11(_, arg1, arg2)
+    assert(arg1 == "value");
+    assert(arg2 == nil);
+  end
+
+  print("starting sub-test 11");
+  VerifyExpectedErrors(1, function()
+    instance:RunTest11("value"); -- should fail!
+  end);
+
   print("VariableArgumentList_Test1 Successful!");
 end
 
@@ -401,6 +413,19 @@ local function VariableArgumentList_ReturnValues_Test1() -- luacheck: ignore
   assert(v3 == 3);
   assert(v4 == nil);
   assert(v5 == 5);
+
+  -- variable argument lists are NOT optional - at least 1 number value is required.
+  TestPackage:DefineReturns("string", "...number");
+  function TestClass:RunTest11()
+    return "value";
+  end
+
+  print("starting sub-test 11");
+
+  VerifyExpectedErrors(1, function()
+    instance:RunTest11(); -- should fail!
+  end);
+
 
   print("VariableArgumentList_ReturnValues_Test1 Successful!");
 end

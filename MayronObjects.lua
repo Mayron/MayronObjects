@@ -315,8 +315,8 @@ end
 
 ---A helper function to print a table's contents.
 ---@param tbl table @The table to print.
----@param depth number @The depth of sub-tables to traverse through and print.
----@param spaces number @The number of spaces used for nested values inside a table.
+---@param depth number @An optional number specifying the depth of sub-tables to traverse through and print.
+---@param spaces number @An optional number specifying the spaces to print to intent nested values inside a table.
 ---@param n number @Do NOT manually set this. This controls formatting through recursion.
 function Framework:PrintTable(tbl, depth, spaces, n)
   local value = self:ToLongString(tbl, depth, spaces, nil, n);
@@ -327,11 +327,13 @@ function Framework:PrintTable(tbl, depth, spaces, n)
   end
 end
 
----A helper function to print a table's contents.
----@param tbl table @The table to print.
----@param depth number @The depth of sub-tables to traverse through and print.
----@param spaces number @The number of spaces used for nested values inside a table.
+---A helper function to return the contents of a table as a long string, similar to
+---what the PrintTable utility method prints except it does not print it.
+---@param tbl table @The table to convert to a long string.
+---@param depth number @An optional number specifying the depth of sub-tables to traverse through and append to the long string.
+---@param spaces number @An optional number specifying the spaces to print to intent nested values inside a table.
 ---@param n number @Do NOT manually set this. This controls formatting through recursion.
+---@return string @A long string containing the contents of the table.
 function Framework:ToLongString(tbl, depth, spaces, result, n)
   result = result or "";
   n = n or 0;
