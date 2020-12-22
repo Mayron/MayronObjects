@@ -165,9 +165,11 @@ local function VariableArgumentList_Test1() -- luacheck: ignore
   print("starting sub-test 1");
   instance:RunTest1("value", 1, 2, 3, 4, 5);
 
+
   VerifyExpectedErrors(1, function()
     instance:RunTest1("value", 1, 2, 3, "error!", 5); -- should fail!
   end);
+
 
   VerifyExpectedErrors(1, function()
     instance:RunTest1("value", 1, 2, 3, nil, 5); -- should fail!
@@ -275,17 +277,15 @@ local function VariableArgumentList_Test1() -- luacheck: ignore
   print("starting sub-test 10");
   instance:RunTest10(1, "2", 3, nil, 5); -- allowed
 
-  -- variable argument lists are NOT optional - at least 1 number must be passed to the method
+  -- variable argument lists are optional - `...number` means that any explicit `nil` values, or non-number values, are not allowed
+  -- but you do NOT need at least 1 number for this to work. You can ignore passing anything to the vararg.
   TestPackage:DefineParams("string", "...number");
   function TestClass:RunTest11(_, arg1, arg2)
     assert(arg1 == "value");
     assert(arg2 == nil);
   end
 
-  print("starting sub-test 11");
-  VerifyExpectedErrors(1, function()
-    instance:RunTest11("value"); -- should fail!
-  end);
+  instance:RunTest11("value"); -- should pass!
 
   print("VariableArgumentList_Test1 Successful!");
 end
@@ -425,10 +425,10 @@ local function VariableArgumentList_ReturnValues_Test1() -- luacheck: ignore
 
   print("starting sub-test 11");
 
-  VerifyExpectedErrors(1, function()
-    instance:RunTest11(); -- should fail!
-  end);
-
+  -- a variable list of return values is optional. There is no minimum requirement of returned values.
+  -- `...number` defines the rule that any values returned should not be `nil` and must be a number.
+  -- but if you do not explicitly return a `nil` value then this will pass.
+  instance:RunTest11(); -- should pass!
 
   print("VariableArgumentList_ReturnValues_Test1 Successful!");
 end
@@ -1755,6 +1755,48 @@ local function NilDefinitions_Test1()  -- luacheck: ignore
   print("NilDefinitions_Test1 Successful!");
 end
 
+local function ExplicitNil_Test1()
+  print("ExplicitNil_Test1 Started");
+
+  local TestPackage = obj:CreatePackage("ExplicitNil_Test1");
+  local TestClass = TestPackage:CreateClass("TestClass");
+
+  function TestClass:RunTest1(_, ...)
+    assert((select("#", ...)) == 4, "Explicit nil values should be passed through as expected");
+    return ...;
+  end
+
+  local returnValueSize = 0;
+  local instance = TestClass();
+  for id, value in obj:IterateArgs(instance:RunTest1(nil, nil, nil, nil)) do
+    returnValueSize = id;
+    assert(value == nil, "All values should be nil");
+  end
+
+  assert(returnValueSize == 4);
+
+  function TestClass:RunTest2(_, ...)
+    assert((select("#", ...)) == 0, "Implicit nil values should not be passed through as expected");
+    return ...;
+  end
+
+  for _, _ in obj:IterateArgs(instance:RunTest2()) do
+    error("No return values should have been returned")
+  end
+
+  TestPackage:DefineParams("?number", "...?table");
+  function TestClass:RunTest3(_, ...)
+    assert((select("#", ...)) == 0, "Implicit nil values should not be passed through as expected");
+    return ...;
+  end
+
+  for _, _ in obj:IterateArgs(instance:RunTest3()) do
+    error("No return values should have been returned")
+  end
+
+  print("ExplicitNil_Test1 Successful!");
+end
+
 ---------------------------------
 -- Run Tests:
 ---------------------------------
@@ -1809,3 +1851,4 @@ end
 -- StaticFunctions_Test1();
 -- FriendClasses_Test1();
 -- NilDefinitions_Test1();
+-- ExplicitNil_Test1();

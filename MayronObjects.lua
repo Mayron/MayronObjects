@@ -184,9 +184,33 @@ do
     end
   end
 
+  -- Only iterates over values found in table and will cut off trailing `nil` values
+  function Framework:IterateValues(...)
+    local index = 0;
+    local args = self:PopTable(...);
+
+    return function()
+      index = index + 1;
+
+      if (index <= #args) then
+        return index, args[index];
+      else
+        -- reached end of wrapper so finish looping and clean up
+        Framework:PushTable(args);
+      end
+    end
+  end
+
+  -- iterates over all arguments in a variable argument list, including explicit `nil` CopyTableValues
+  -- does not trim off trailing `nil` values.
   function Framework:IterateArgs(...)
     local index = 0;
     local size = select("#", ...); -- can only accurately get size of vararg
+
+    if (size == 1 and (select(1, ...)) == nil) then
+      print("error");
+      error("wrong")
+    end
     local args = self:PopTable(...); -- may contain `nil` values, so we cannot use `#`.
 
     return function()
@@ -300,7 +324,11 @@ do
       PushTable(wrapper);
     end
 
-    return unpack(wrapper, 1, length);
+    if (not Framework:IsNumber(length) or length < 1) then
+      return unpack(wrapper);
+    else
+      return unpack(wrapper, 1, length);
+    end
   end
 end
 
@@ -321,12 +349,12 @@ end
 function Framework:FillTable(tbl, otherTbl, preserveOldValue)
   for key, value in pairs(otherTbl) do
     if (self:IsTable(tbl[key]) and self:IsTable(value)) then
-      self:Fill(tbl[key], value, preserveOldValue);
+      self:FillTable(tbl[key], value, preserveOldValue);
 
     elseif (not preserveOldValue or self:IsNil(tbl[key])) then
       if (self:IsTable(value)) then
         tbl[key] = self:PopTable();
-        self:Fill(tbl[key], value);
+        self:FillTable(tbl[key], value);
       else
         tbl[key] = value;
       end
@@ -628,7 +656,7 @@ local function CreateProxyObject(object, key, self, controller, privateData)
       for _, attribute in ipairs(attributes) do
         if (not attribute:OnExecute(proxyObject.self, proxyObject.privateData, proxyObject.key, unpack(args, 1, argsLength))) then
           Framework:PushTable(args);
-          return nil; -- if attribute returns false, do no move onto the next attribute and do not call function
+          return -- if attribute returns false, do no move onto the next attribute and do not call function
         end
       end
     end
@@ -649,7 +677,7 @@ local function CreateProxyObject(object, key, self, controller, privateData)
     Framework:PushTable(args);
 
     -- Silent errors
-    if (not Framework:IsTable(returnValues)) then return nil; end
+    if (not Framework:IsTable(returnValues)) then return end
 
     if (proxyObject.key ~= "Destroy") then
       local instanceController = Core:GetController(proxyObject.self, true);
@@ -665,7 +693,7 @@ local function CreateProxyObject(object, key, self, controller, privateData)
 
     if (returnValuesLength == 0) then
       Framework:PushTable(returnValues);
-      return nil; -- fixes returning nil instead of nothing
+      return
     end
 
     return Framework:UnpackTable(returnValues, false, returnValuesLength);
@@ -954,7 +982,7 @@ do
 
     if (not (Framework:IsTable(frame) and frame.GetObjectType)) then
       -- might be a property we are searching for, so do not throw an error!
-      return nil;
+      return
     end
 
     if (frame[key]) then
@@ -1705,25 +1733,25 @@ end
 
 function Core:ValidateFunctionCall(definition, errorMessage, ...)
   local values = Framework:PopTable(...);
+  local length = select("#", ...);
 
   if (not definition) then
-    return values, select("#", ...);
+    return values, length;
   end
 
-  local id = 1;
+  local index = 1;
   local realValue = (select(1, ...));
   local definitionType;
   local errorFound;
   local defaultValue;
   local defaultValues = Framework:PopTable();
   local vararg;
-  local varargStartIndex = 0;
 
   repeat
-    definitionType = definition[id] or vararg;
+    definitionType = definition[index] or vararg;
 
     if (Framework:IsTable(definitionType)) then
-      -- ordering matters!:
+      -- a default value detected! ordering of these 2 lines is important:
       defaultValue = definitionType[2];
       definitionType = definitionType[1];
     end
@@ -1731,17 +1759,18 @@ function Core:ValidateFunctionCall(definition, errorMessage, ...)
     if (definitionType:find("%.%.%.")) then
       vararg = definitionType:gsub("%.%.%.", "");
       definitionType = vararg;
-      varargStartIndex = id;
+
+      -- varargs are optional, if no explicit `nil` is provided then this is acceptible.
+      if (index > length) then break end
     end
 
     if (definitionType:find("|")) then
+      -- a union type detected!
       for _, singleDefinitionType in Framework:IterateArgs(strsplit("|", definitionType)) do
         singleDefinitionType = string.gsub(singleDefinitionType, "%s", "");
         errorFound = self:ValidateValue(singleDefinitionType, realValue, defaultValue);
 
-        if (not errorFound) then
-          break;
-        end
+        if (not errorFound) then break end
       end
 
       if (errorFound) then
@@ -1749,6 +1778,7 @@ function Core:ValidateFunctionCall(definition, errorMessage, ...)
       end
     else
       if (definitionType:find("=")) then
+        -- a default value detected!
         definitionType, defaultValue = strsplit("=", definitionType);
       end
 
@@ -1764,38 +1794,33 @@ function Core:ValidateFunctionCall(definition, errorMessage, ...)
         errorMessage, definitionType, self:GetValueType(realValue), tostring(realValue));
       end
 
-      errorMessage = errorMessage:gsub("##", "#" .. tostring(id));
+      errorMessage = errorMessage:gsub("##", "#" .. tostring(index));
       self:Error(errorMessage);
-      return;
+      return
     end
 
-    defaultValues[id] = CastSimpleDefault(definitionType, defaultValue);
+    defaultValues[index] = CastSimpleDefault(definitionType, defaultValue);
 
-    id = id + 1;
-    realValue = (select(id, ...));
+    index = index + 1;
+    realValue = (select(index, ...));
 
-  until ((not vararg and definition[id] == nil) or (vararg and id > select("#", ...)));
-
-  local length = 0;
-
-  if (vararg) then
-    length = varargStartIndex - 1;
-  else
-    for i, _ in pairs(definition) do
-      if (i > length) then
-        length = i;
-      end
-    end
-  end
-
-  length = max(select("#", ...), length);
+  until ((not vararg and definition[index] == nil) or (vararg and index > length));
 
   -- Swap out nil values with their default values:
-  for i = 1, length do
-    if (values[i] == nil) then
-      values[i] = defaultValues[i];
+  for i, default in pairs(defaultValues) do
+    if (values[i] == nil and default ~= nil) then
+      values[i] = default;
     end
   end
+
+  -- calculate real length (real values might be implicit `nils` but we have defaults to fill in):
+  length = 0;
+  for id, _ in pairs(values) do
+    length = id;
+  end
+
+  -- if there are no defaults, we should fallback to vararg length:
+  length = max((select("#", ...)), length)
 
   Framework:PushTable(defaultValues);
 
